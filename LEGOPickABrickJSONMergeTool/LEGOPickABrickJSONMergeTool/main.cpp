@@ -3,11 +3,14 @@
 #include <Windows.h>
 #include "utils.hpp"
 #include "json.hpp"
+#include <string>
+#include <filesystem>
+#include <algorithm>
 
 #define ELEMENT_ID_KEY "elementId"
 #define QUANTITY_KEY "quantity"
 
-std::unordered_map<std::string, std::string> getFilePathsFromExplorer()
+std::vector<std::string> getFilePathsFromExplorer()
 {
 	OPENFILENAME ofn;
 
@@ -24,14 +27,14 @@ std::unordered_map<std::string, std::string> getFilePathsFromExplorer()
 	ofn.nFilterIndex = 1;
 	ofn.Flags = OFN_ALLOWMULTISELECT | OFN_EXPLORER;
 
-	//Open the file dialog using the previous parameters
+	//Open the file dialog using the previous parameters.
 	GetOpenFileName(&ofn);
 
-	std::unordered_map<std::string, std::string> paths;
+	std::vector<std::string> paths;
 
-	//If the user clicks cancel, filePaths will be empty
+	//If the user clicks cancel, filePaths will be empty.
 	if (wcslen(filePaths) == 0)
-		return paths; //Return an empty vector
+		return paths; //Return an empty vector.
 
 	//Parse the selected filepaths, this implementation was taken from: https://stackoverflow.com/questions/26317556/how-to-get-list-of-selected-files-when-using-getopenfilename-with-multiselect
 	wchar_t* str = filePaths;
@@ -47,64 +50,64 @@ std::unordered_map<std::string, std::string> getFilePathsFromExplorer()
 
 			std::string path = utils::wStringToString(filePath + L"\\" + fileName);
 
-			paths[path] = "";
+			paths.push_back(path);
 		}
 	}
 	else //If just one file was selected...
 	{
 		std::string path = utils::wStringToString(filePath);
 
-		paths[path] = "";
+		paths.push_back(path);
 	}
 
 	return paths;
 }
 
-nlohmann::json mergeJSONData(std::unordered_map<std::string, std::string> filePaths)
+nlohmann::json mergeJSONData(std::vector<std::string> filePaths)
 {
-	nlohmann::json combinedData = NULL;
+	nlohmann::json mergedData = NULL; //Create a new JSON blob.
 
-	for (auto& fp : filePaths)
+	for (auto &filePath : filePaths)
 	{
-		if (combinedData == NULL)
+		if (mergedData == NULL) //On the first pass, push all new data into the merged blob.
 		{
-			std::ifstream f(fp.first);
-			f >> combinedData;
+			std::ifstream file(filePath);
+			file >> mergedData;
 		}
-		else
+		else //On every subsequent pass, evaluate how to merge the data...
 		{
-			std::ifstream f(fp.first);
+			std::ifstream file(filePath); //Push the new data into its own blob...
 			nlohmann::json newData;
-			f >> newData;
+			file >> newData;
 
-			for (auto& j : newData.items())
+			for (auto &newObject : newData.items()) //Iterate the new data...
 			{
-				auto id = j.value().find(ELEMENT_ID_KEY).value();
+				auto elementId = newObject.value()[ELEMENT_ID_KEY]; //Get the new object's element id...
 
 				bool elementIdAlreadyExists = false;
-				int targetObjectIndex = std::stoi(j.key());
+				int targetObjectIndex = std::stoi(newObject.key());
 
-				for (auto& cj : combinedData.items())
+				for (auto &mergedObject : mergedData.items())
 				{
-					if (cj.value().find(ELEMENT_ID_KEY).value() == id)
+					if (mergedObject.value()[ELEMENT_ID_KEY] == elementId) //Check if the new object's element id is already present in any object in the merged data...
 					{
 						elementIdAlreadyExists = true;
-						targetObjectIndex = std::stoi(cj.key());
+						targetObjectIndex = std::stoi(mergedObject.key());
 					}
 				}
 
-				if (elementIdAlreadyExists)
+				if (elementIdAlreadyExists) //If the element id is already present, enumerate the quantities and assign the value to the merged object...
 				{
-					const int newObjectIndex = std::stoi(j.key());
-					int combinedQuantity = combinedData[targetObjectIndex][QUANTITY_KEY];
+					const int newObjectIndex = std::stoi(newObject.key());
+					int mergedQuantity = mergedData[targetObjectIndex][QUANTITY_KEY];
 					int newQuantity = newData[newObjectIndex][QUANTITY_KEY];
-					combinedData[targetObjectIndex][QUANTITY_KEY] = combinedQuantity + newQuantity;
-					std::cout << "New combined quantity in object: " << std::endl << combinedData[targetObjectIndex].dump(4) << std::endl;
+					mergedData[targetObjectIndex][QUANTITY_KEY] = mergedQuantity + newQuantity;
+					std::cout << "New merged quantity in object: " << std::endl << mergedData[targetObjectIndex].dump(4) << std::endl;
 				}
-				else
+				else //If the element id is unique, append the object to the merged blob.
 				{
-					std::cout << "New combined object appended: " << std::endl << newData[targetObjectIndex].dump(4) << std::endl;
-					combinedData.push_back(newData[targetObjectIndex].get<nlohmann::json>());
+					mergedData.push_back(newData[targetObjectIndex].get<nlohmann::json>());
+					std::cout << "New object appended: " << std::endl << newData[targetObjectIndex].dump(4) << std::endl;
 				}
 			}
 		}
@@ -124,7 +127,7 @@ int main()
 {
 	std::cout << "Please select two or more JSON files to combine!" << std::endl;
 
-	std::unordered_map<std::string, std::string> filePaths = getFilePathsFromExplorer();
+	std::vector<std::string> filePaths = getFilePathsFromExplorer();
 
 	if (filePaths.size() <= 1)
 	{
@@ -132,6 +135,11 @@ int main()
 	}
 	else
 	{
-		mergeJSONData(filePaths);
+		nlohmann::json mergedJSON = mergeJSONData(filePaths);
+
+		if (nlohmann::json::accept(mergedJSON))
+		{
+
+		}
 	}
 }

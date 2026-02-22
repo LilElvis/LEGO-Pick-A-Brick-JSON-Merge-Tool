@@ -12,8 +12,6 @@
 
 namespace utils
 {
-	void BindCrtHandlesToStdHandles(bool bindStdIn, bool bindStdOut, bool bindStdErr);
-
 	std::wstring stringToWString(std::string text);
 
 	std::string wStringToString(std::wstring text);
