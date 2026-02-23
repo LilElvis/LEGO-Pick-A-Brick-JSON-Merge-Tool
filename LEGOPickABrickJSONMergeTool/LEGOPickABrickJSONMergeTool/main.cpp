@@ -1,11 +1,10 @@
 #include <iostream>
 #include <fstream>
+#include <string>
+#include <filesystem>
 #include <Windows.h>
 #include "utils.hpp"
 #include "json.hpp"
-#include <string>
-#include <filesystem>
-#include <algorithm>
 
 #define ELEMENT_ID_KEY "elementId"
 #define QUANTITY_KEY "quantity"
@@ -122,7 +121,6 @@ namespace pabmt
 
 	bool saveJSONData(const nlohmann::json& blob)
 	{
-
 		OPENFILENAME ofn;
 
 		ZeroMemory(&ofn, sizeof(OPENFILENAME));
