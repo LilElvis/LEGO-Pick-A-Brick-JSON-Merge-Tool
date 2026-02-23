@@ -15,4 +15,8 @@ namespace utils
 	std::wstring stringToWString(std::string text);
 
 	std::string wStringToString(std::wstring text);
+
+	std::wstring baseName(std::wstring const& path, std::wstring const& delims);
+
+	std::string baseName(std::string const& path, std::string const& delims);
 }

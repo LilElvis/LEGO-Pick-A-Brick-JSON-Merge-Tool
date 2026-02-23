@@ -37,4 +37,14 @@ namespace utils
 
 		return str;
 	}
+
+	std::wstring baseName(std::wstring const& path, std::wstring const& delims = L"/\\")
+	{
+		return path.substr(path.find_last_of(delims) + 1);
+	}
+
+	std::string baseName(std::string const& path, std::string const& delims = "/\\")
+	{
+		return path.substr(path.find_last_of(delims) + 1);
+	}
 }
