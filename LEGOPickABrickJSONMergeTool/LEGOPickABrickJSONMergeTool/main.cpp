@@ -199,29 +199,32 @@ namespace pabmt
 
 		return true;
 	}
+}
 
-	int main()
+int main()
+{
+	std::cout << "Please select two or more JSON files to combine!" << std::endl;
+
+	std::vector<std::string> filePaths = pabmt::getFilePathsFromExplorer();
+
+	if (filePaths.size() <= 1)
 	{
-		std::cout << "Please select two or more JSON files to combine!" << std::endl;
+		std::cerr << "Insufficient files selected." << std::endl;
+	}
+	else
+	{
+		nlohmann::json mergedJSON = pabmt::mergeJSONData(filePaths);
 
-		std::vector<std::string> filePaths = getFilePathsFromExplorer();
-
-		if (filePaths.size() <= 1)
+		if (pabmt::saveJSONData(mergedJSON))
 		{
-			std::cerr << "Insufficient files selected." << std::endl;
+			return 0;
 		}
 		else
 		{
-			nlohmann::json mergedJSON = mergeJSONData(filePaths);
-
-			if (nlohmann::json::accept(mergedJSON))
-			{
-				saveJSONData(mergedJSON);
-			}
-			else
-			{
-				std::cerr << "An error occured while merging the json files..." << std::endl;
-			}
+			std::cerr << "No json file was saved." << std::endl;
+			return 1;
 		}
 	}
+
+	
 }
