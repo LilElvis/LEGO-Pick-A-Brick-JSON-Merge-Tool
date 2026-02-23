@@ -136,10 +136,10 @@ namespace pabmt
 		ofn.nFilterIndex = 1;
 		ofn.Flags = OFN_EXPLORER;
 
-		//Open the file dialog using the previous parameters
+		//Open the file dialog using the previous parameters.
 		GetSaveFileName(&ofn);
 
-		//If the user clicks cancel, filePath will be empty
+		//If the user clicks cancel, filePath will be empty.
 		if (wcslen(selectedFilePath) == 0)
 		{
 			std::cerr << std::endl << "No file was selected, or no name was provided.\n";
@@ -148,11 +148,11 @@ namespace pabmt
 
 		std::wstring modifiedFilePath = selectedFilePath;
 
-		//If the file path doesn't contain the proper file extension, append it
+		//If the file path doesn't contain the proper file extension, append it.
 		if (!(modifiedFilePath.substr(modifiedFilePath.find_last_of(L".") + 1) == L"json"))
 			modifiedFilePath += L".json";
 
-		//If the file already exists, warn the user that their data will be overwritten
+		//If the file already exists, warn the user that their data will be overwritten.
 		if (std::filesystem::exists(modifiedFilePath))
 		{
 			int messageValue = 0;
